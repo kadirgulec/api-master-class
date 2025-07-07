@@ -7,10 +7,12 @@ use App\Http\Requests\Api\LoginUserRequest;
 use App\Models\User;
 use App\Traits\ApiResponses;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
     use ApiResponses;
+
     public function login(LoginUserRequest $request): JsonResponse
     {
         $request->validated($request->all());
@@ -24,9 +26,20 @@ class AuthController extends Controller
         return $this->ok(
             'Authenticated',
             [
-                'token' => $user->createToken('auth_token'. $user->email)->plainTextToken,
+                'token' => $user->createToken(
+                    'auth_token_'.$user->email,
+                    ['*'],
+                    now()->addMonth()
+                )->plainTextToken,
             ]
         );
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return $this->ok('logout');
     }
 
     public function register()
